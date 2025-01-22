@@ -1,7 +1,10 @@
 const { generateSalt, hash } = require('./hashing');
 const sql = require('./pg');
 const cr = require('./responses');
-const { generateAuthenticationToken, verifyToken } = require('./token');
+const {
+    generateAuthenticationToken,
+    verifyAuthenticationToken
+} = require('./token');
 
 /**
  * Authenticates the login credentials of a player. The primary identifier
@@ -132,7 +135,7 @@ const fetchAllPlayers = async () => {
  * a message on 401 and an error object on 500.
  */
 const fetchPlayerByToken = async (token) => {
-    const verification = verifyToken(token);
+    const verification = verifyAuthenticationToken(token);
     if (verification.success) {
         const { payload } = verification;
         const { username, player_id } = payload;
