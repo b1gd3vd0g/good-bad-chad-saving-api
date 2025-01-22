@@ -18,6 +18,7 @@ if (!(DBNAME && PGHOST && PGPASS && PGPORT && PGUSER)) {
     );
 }
 
+/** A connection to the postgres database. */
 const sql = pg(
     `postgresql://${PGUSER}:${PGPASS}@${PGHOST}:${PGPORT}/${DBNAME}`
 );
