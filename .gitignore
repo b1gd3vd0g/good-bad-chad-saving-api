@@ -1,0 +1,7 @@
+/node_modules
+*.env*
+
+# These are usually just files for me to plan things out on.
+*.md
+# But these ones are important! Negate the README files.
+!README.md
