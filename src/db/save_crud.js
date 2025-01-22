@@ -195,7 +195,7 @@ const fetchSavesByToken = async (authToken) => {
 
     const cols = ['save_id', 'saved_at', 'zone', 'health', 'rune_count'];
     try {
-        const saves = sql`
+        const saves = await sql`
             SELECT ${sql(cols)} FROM saves 
                 WHERE player = ${player_id};
         `;
