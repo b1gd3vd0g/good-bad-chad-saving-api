@@ -147,6 +147,26 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
     }
 };
 
+const deleteSaveById = async (saveId, authToken) => {
+    const player = await fetchPlayerByToken(authToken);
+    if (player.code !== 200) {
+        // player could not be found.
+        return player;
+    }
+    const { player_id } = player.info;
+    try {
+        const result = await sql`
+            DELETE FROM saves
+                WHERE player = ${player_id}
+                    AND save_id = ${saveId};
+        `;
+        if (result.count === 1) return cr(200);
+        else if (result.count === 0) return cr(404);
+    } catch (e) {
+        return cr(500, e);
+    }
+};
+
 /**
  * Fetch a single, entire save document from the database.
  * @param {string} saveId The `save_id` of the document to be fetched.
@@ -210,6 +230,7 @@ const fetchSavesByToken = async (authToken) => {
 
 module.exports = {
     createNewSave,
+    deleteSaveById,
     fetchOneSaveById,
     fetchSavesByToken
 };

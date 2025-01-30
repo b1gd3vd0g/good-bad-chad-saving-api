@@ -1,7 +1,8 @@
 const {
     createNewSave,
     fetchOneSaveById,
-    fetchSavesByToken
+    fetchSavesByToken,
+    deleteSaveById
 } = require('../db/save_crud');
 
 const router = require('express').Router();
@@ -18,6 +19,13 @@ router.get('/:save_id', async (req, res) => {
     const token = req.headers.authorization.substring('BEARER '.length);
     const save = await fetchOneSaveById(save_id, token);
     return res.status(save.code).json(save.info);
+});
+
+router.delete('/:save_id', async (req, res) => {
+    const { save_id } = req.params;
+    const token = req.headers.authorization.substring('BEARER '.length);
+    const deletion = await deleteSaveById(save_id, token);
+    return res.status(deletion.code).json(deletion.info);
 });
 
 router.get('/', async (req, res) => {
