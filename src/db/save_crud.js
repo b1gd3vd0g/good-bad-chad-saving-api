@@ -200,7 +200,7 @@ const fetchSavesByToken = async (authToken) => {
                 WHERE player = ${player_id};
         `;
         if (saves.length === 0) {
-            return cr(404, 'No saves were found');
+            return cr(404, []);
         }
         return cr(200, saves);
     } catch (e) {
