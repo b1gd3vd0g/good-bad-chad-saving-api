@@ -63,78 +63,85 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
     }
 
     /** An object identical to a row in the database. */
-    const dbObj = {
-        save_id: saveId,
-        player: player_id,
-        saved_at: new Date(),
-        zone: zone.name ?? null,
-        bunnies_killed: story.bunniesKilled ?? null,
-        bots_killed: story.botsKilled ?? null,
-        finished_hunting: story.finishedHunting ?? null,
-        hunting_inst_received: story.huntingInstructionsReceived ?? null,
-        invited_hunting: story.invitedHunting ?? null,
-        slimes_killed: story.slimesKilled ?? null,
-        snakes_killed: story.snakesKilled ?? null,
-        tutorial_complete: story.tutorialComplete ?? null,
-        village_attack_ended: story.villageAttackEnded ?? null,
-        bomb_count: inventory.ammoBag.find(typeFinder('bomb')).amount ?? null,
-        broccoli_count:
-            inventory.ammoBag.find(typeFinder('broccoli')).amount ?? null,
-        rock_count: inventory.ammoBag.find(typeFinder('rock')).amount ?? null,
-        slimeball_count:
-            inventory.ammoBag.find(typeFinder('slimeball')).amount ?? null,
-        snowball_count:
-            inventory.ammoBag.find(typeFinder('snowball')).amount ?? null,
-        sus_snowball_count:
-            inventory.ammoBag.find(typeFinder('sus_snowball')).amount ?? null,
-        water_balloon_count:
-            inventory.ammoBag.find(typeFinder('water_balloon')).amount ?? null,
-        bacon_count: inventory.foodBag.find(typeFinder(0)).amount ?? null,
-        beef_count: inventory.foodBag.find(typeFinder(6)).amount ?? null,
-        burger_count: inventory.foodBag.find(typeFinder(1)).amount ?? null,
-        chicken_count: inventory.foodBag.find(typeFinder(5)).amount ?? null,
-        energy_drink_count:
-            inventory.foodBag.find(typeFinder(2)).amount ?? null,
-        ham_count: inventory.foodBag.find(typeFinder(4)).amount ?? null,
-        steak_count: inventory.foodBag.find(typeFinder(3)).amount ?? null,
-        rune_count: inventory.runes ?? null,
-        action: chad.action ?? null,
-        already_landed: chad.alreadyLanded ?? null,
-        bb_pos_x: chad.boundingBox.pos.x ?? null,
-        bb_pos_y: chad.boundingBox.pos.y ?? null,
-        bb_size_x: chad.boundingBox.size.x ?? null,
-        bb_size_y: chad.boundingBox.size.y ?? null,
-        can_dash: chad.canDash ?? null,
-        can_double_jump: chad.canDoubleJump ?? null,
-        damage_mult: chad.damageMultiplier ?? null,
-        dash_cooldown: chad.dashCooldownTimer ?? null,
-        dash_stop: chad.dashStopTimer ?? null,
-        facing: chad.facing ?? null,
-        first_jump_timer: chad.firstJumpTimer ?? null,
-        first_jump_vel: chad.firstJumpVelocity ?? null,
-        has_dashed: chad.hasDashed ?? null,
-        has_double_jumped: chad.hasDoubleJumped ?? null,
-        health: chad.health ?? null,
-        is_dashing: chad.isDashing ?? null,
-        is_jumping: chad.isJumping ?? null,
-        is_on_ground: chad.isOnGround ?? null,
-        lbb_pos_x: chad.lastBoundingBox.pos.x ?? null,
-        lbb_pos_y: chad.lastBoundingBox.pos.y ?? null,
-        lbb_size_x: chad.lastBoundingBox.size.x ?? null,
-        lbb_size_y: chad.lastBoundingBox.size.y ?? null,
-        max_health: chad.maxHealth ?? null,
-        pos_x: chad.pos.x ?? null,
-        pos_y: chad.pos.y ?? null,
-        prev_y_on_ground: chad.prevYPosOnGround ?? null,
-        scale_x: chad._scale.x ?? null,
-        scale_y: chad._scale.y ?? null,
-        scaled_size_x: chad.scaledSize.x ?? null,
-        scaled_size_y: chad.scaledSize.y ?? null,
-        second_jump_vel: chad.secondJumpVelocity ?? null,
-        speed: chad.speed ?? null,
-        vel_x: chad.velocity.x ?? null,
-        vel_y: chad.velocity.y ?? null
-    };
+    let dbObj;
+    try {
+        dbObj = {
+            save_id: saveId,
+            player: player_id,
+            saved_at: new Date(),
+            zone: zone.name,
+            bunnies_killed: story.bunniesKilled ?? null,
+            bots_killed: story.botsKilled ?? null,
+            finished_hunting: story.finishedHunting ?? null,
+            hunting_inst_received: story.huntingInstructionsReceived ?? null,
+            invited_hunting: story.invitedHunting ?? null,
+            slimes_killed: story.slimesKilled ?? null,
+            snakes_killed: story.snakesKilled ?? null,
+            tutorial_complete: story.tutorialComplete ?? null,
+            village_attack_ended: story.villageAttackEnded ?? null,
+            bomb_count: inventory.ammoBag.find(typeFinder('bomb')).amount,
+            broccoli_count: inventory.ammoBag.find(typeFinder('broccoli'))
+                .amount,
+            rock_count: inventory.ammoBag.find(typeFinder('rock')).amount,
+            slimeball_count: inventory.ammoBag.find(typeFinder('slimeball'))
+                .amount,
+            snowball_count: inventory.ammoBag.find(typeFinder('snowball'))
+                .amount,
+            sus_snowball_count: inventory.ammoBag.find(
+                typeFinder('sus_snowball')
+            ).amount,
+            water_balloon_count: inventory.ammoBag.find(
+                typeFinder('water_balloon')
+            ).amount,
+            bacon_count: inventory.foodBag.find(typeFinder(0)).amount,
+            beef_count: inventory.foodBag.find(typeFinder(6)).amount,
+            burger_count: inventory.foodBag.find(typeFinder(1)).amount,
+            chicken_count: inventory.foodBag.find(typeFinder(5)).amount,
+            energy_drink_count: inventory.foodBag.find(typeFinder(2)).amount,
+            ham_count: inventory.foodBag.find(typeFinder(4)).amount,
+            steak_count: inventory.foodBag.find(typeFinder(3)).amount,
+            rune_count: inventory.runes,
+            action: chad.action,
+            already_landed: chad.alreadyLanded,
+            bb_pos_x: chad.boundingBox.pos.x,
+            bb_pos_y: chad.boundingBox.pos.y,
+            bb_size_x: chad.boundingBox.size.x,
+            bb_size_y: chad.boundingBox.size.y,
+            can_dash: chad.canDash,
+            can_double_jump: chad.canDoubleJump,
+            damage_mult: chad.damageMultiplier,
+            dash_cooldown: chad.dashCooldownTimer,
+            dash_stop: chad.dashStopTimer,
+            facing: chad.facing,
+            first_jump_timer: chad.firstJumpTimer,
+            first_jump_vel: chad.firstJumpVelocity,
+            has_dashed: chad.hasDashed,
+            has_double_jumped: chad.hasDoubleJumped,
+            health: chad.health,
+            is_dashing: chad.isDashing,
+            is_jumping: chad.isJumping,
+            is_on_ground: chad.isOnGround,
+            lbb_pos_x: chad.lastBoundingBox.pos.x,
+            lbb_pos_y: chad.lastBoundingBox.pos.y,
+            lbb_size_x: chad.lastBoundingBox.size.x,
+            lbb_size_y: chad.lastBoundingBox.size.y,
+            max_health: chad.maxHealth,
+            pos_x: chad.pos.x,
+            pos_y: chad.pos.y,
+            prev_y_on_ground: chad.prevYPosOnGround,
+            scale_x: chad._scale.x,
+            scale_y: chad._scale.y,
+            scaled_size_x: chad.scaledSize.x,
+            scaled_size_y: chad.scaledSize.y,
+            second_jump_vel: chad.secondJumpVelocity,
+            speed: chad.speed,
+            vel_x: chad.velocity.x,
+            vel_y: chad.velocity.y
+        };
+    } catch (e) {
+        // This means that the request must have been bad.
+        return cr(400, e);
+    }
     const cols = Object.keys(dbObj);
 
     try {
