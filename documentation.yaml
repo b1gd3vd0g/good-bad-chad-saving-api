@@ -1,0 +1,574 @@
+openapi: 3.0.0
+info:
+  title: The Good, the Bad, and Chad! Saving API
+  termsOfService: 'https://goodbadchad.bigdevdog.com'
+  version: 0.1.0
+  contact:
+    name: Devin Peevy
+    email: devin.peevy@outlook.com
+
+servers:
+  - url: https://goodbadchad.bigdevdog.com:6900
+    description: Production server
+paths:
+  /player:
+    get:
+      tags:
+        - player
+      summary: Get signed in player account
+      description: Fetch a single player from the database using an authentication token (safe information only).
+      parameters:
+        - $ref: '#/components/parameters/PlayerAuthenticationToken'
+      responses:
+        200:
+          $ref: '#/components/responses/200_SafePlayerInfo'
+        401:
+          $ref: '#/components/responses/401_TokenAuthFailure'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+    post:
+      tags:
+        - player
+      summary: Create new player account.
+      description: Create a new player account.
+      responses:
+        201:
+          description: Player account created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        400:
+          $ref: '#/components/responses/400_BadRequest'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+  /player/all:
+    get:
+      tags:
+        - player
+      summary: Get all player accounts
+      description: Fetch all player accounts from the database (safe information only)
+      responses:
+        200:
+          description: Players fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SafePlayerInfo'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+  /player/login:
+    post:
+      tags:
+        - player
+      summary: Authenticate player login credentials
+      responses:
+        200:
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                required:
+                  - token
+        400:
+          $ref: '#/components/responses/400_BadRequest'
+        401:
+          $ref: '#/components/responses/401_InvalidLoginInfo'
+  /save:
+    get:
+      tags:
+        - save
+      summary: Get all *partial* saves belonging to signed in player
+      description:
+        Get an array of all *partial* save files associated with the account
+        represented by the PlayerAuthenticationToken.
+      parameters:
+        - $ref: '#/components/parameters/PlayerAuthenticationToken'
+      responses:
+        200:
+          $ref: '#/components/responses/200_PartialSaveArray'
+        401:
+          $ref: '#/components/responses/401_TokenAuthFailure'
+        404:
+          $ref: '#/components/responses/404_NoSavesFound'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+    post:
+      tags:
+        - save
+      summary: Create a new save file belonging to signed in player
+      description:
+        Create a new save file associated with the account represented by the
+        PlayerAuthenticationToken.
+      parameters:
+        - $ref: '#/components/parameters/PlayerAuthenticationToken'
+      responses:
+        201:
+          description: Save added successfully.
+        400:
+          $ref: '#/components/responses/400_BadRequest'
+        401:
+          $ref: '#/components/responses/401_TokenAuthFailure'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+  /save/{save_id}:
+    get:
+      tags:
+        - save
+      summary: Get a single, *entire* save file belonging to signed in player by id
+      description:
+        Get an *entire* save file associated with the account represented by the
+        PlayerAuthenticationToken by save_id.
+      parameters:
+        - $ref: '#/components/parameters/PlayerAuthenticationToken'
+        - $ref: '#/components/parameters/SaveId'
+      responses:
+        200:
+          $ref: '#/components/responses/200_EntireSaveFile'
+        401:
+          $ref: '#/components/responses/401_TokenAuthFailure'
+        404:
+          $ref: '#/components/responses/404_FNF'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+    delete:
+      tags:
+        - save
+      summary: Delete a single save file belonging to signed in player by id
+      description:
+        Delete a single save file associated with the account represented by the
+        PlayerAuthenticationToken by save_id.
+      parameters:
+        - $ref: '#/components/parameters/PlayerAuthenticationToken'
+        - $ref: '#/components/parameters/SaveId'
+      responses:
+        200:
+          description: File deleted successfully.
+        401:
+          $ref: '#/components/responses/401_TokenAuthFailure'
+        404:
+          $ref: '#/components/responses/404_FNF'
+        500:
+          $ref: '#/components/responses/500_ServerSideError'
+components:
+  parameters:
+    PlayerAuthenticationToken:
+      in: header
+      name: Authorization
+      schema:
+        type: string
+        description:
+          Contains the prefix "BEARER " followed by a JSON web token provided by
+          logging in at "POST /player/login".
+      required: true
+    SaveId:
+      in: path
+      name: save_id
+      schema:
+        type: string
+        description: The save_id associated with the save to be fetched.
+      required: true
+  responses:
+    200_EntireSaveFile:
+      description: A single *entire* save file.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EntireSaveFile'
+    200_PartialSaveArray:
+      description: An array of all *partial* save files associated with the account.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PartialSaveArray'
+    200_SafePlayerInfo:
+      description: The safe information (not private) of a single player.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SafePlayerInfo'
+    400_BadRequest:
+      description: Request is incomplete or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+    401_TokenAuthFailure:
+      description: Player auth token is invalid, missing, or cannot be parsed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/401_TokenAuthFailure'
+    401_InvalidLoginInfo:
+      description: Login credentials provided did not correspond with our database.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+    404_FNF:
+      description:
+        No save file could be found connected to the account with the given
+        save_id. This IS considered an error!
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+    404_NoSavesFound:
+      description:
+        No saves could be found connected to the signed in account. This is NOT
+        considered an error!
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EmptyArray'
+    500_ServerSideError:
+      description: The error returned from some server side error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServerSideError'
+  schemas:
+    401_TokenAuthFailure:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - NPF (No Player Found)
+            - EAR (Too early to use token (shouldn't happen))
+            - EXP (Token is expired)
+            - INV (Invalid token, could not parse)
+            - ABS (Token is absent from request)
+        message:
+          type: string
+          description:
+            A description explaining the reason to the user why the token cannot
+            be parsed.
+      required:
+        - code
+        - message
+    EmptyArray:
+      type: array
+    EntireSaveFile:
+      type: object
+      properties:
+        save_id:
+          type: string
+          description: The save_id associated with this save file.
+        player:
+          type: string
+          description: The player_id of the owner of this save file.
+        saved_at:
+          type: string
+          description: The date and time the save file was created.
+        zone:
+          type: string
+          description: ZONE.name
+        bunnies_killed:
+          type: integer
+          description: STORY.bunniesKilled
+        bots_killed:
+          type: integer
+          description: STORY.botsKilled
+        finished_hunting:
+          type: boolean
+          description: STORY.finishedHunting
+        hunting_inst_received:
+          type: boolean
+          description: STORY.huntingInstructionsReceived
+        invited_hunting:
+          type: boolean
+          description: STORY.invitedHunting
+        slimes_killed:
+          type: integer
+          description: STORY.slimesKilled
+        snakes_killed:
+          type: integer
+          description: STORY.snakesKilled
+        tutorial_complete:
+          type: boolean
+          description: STORY.tutorialComplete
+        village_attack_ended:
+          type: boolean
+          description: STORY.villageAttackEnded
+        bomb_count:
+          type: integer
+          description: INVENTORY.ammoBag @ bomb
+        broccoli_count:
+          type: integer
+          description: INVENTORY.ammoBag @ broccoli
+        rock_count:
+          type: integer
+          description: INVENTORY.ammoBag @ rock
+        slimeball_count:
+          type: integer
+          description: INVENTORY.ammoBag @ slimeball
+        snowball_count:
+          type: integer
+          description: INVENTORY.ammoBag @ snowball
+        sus_snowball_count:
+          type: integer
+          description: INVENTORY.ammoBag @ sus_snowball
+        water_balloon_count:
+          type: integer
+          description: INVENTORY.ammoBag @ water_balloon
+        bacon_count:
+          type: integer
+          description: INVENTORY.foodBag @ 0
+        beef_count:
+          type: integer
+          description: INVENTORY.foodBag @ 6
+        burger_count:
+          type: integer
+          description: INVENTORY.foodBag @ 1
+        chicken_count:
+          type: integer
+          description: INVENTORY.foodBag @ 5
+        energy_drink_count:
+          type: integer
+          description: INVENTORY.foodBag @ 2
+        ham_count:
+          type: integer
+          description: INVENTORY.foodBag @ 4
+        steak_count:
+          type: integer
+          description: INVENTORY.foodBag @ 3
+        rune_count:
+          type: integer
+          description: INVENTORY.runes
+        action:
+          type: string
+          description: CHAD.action
+        already_landed:
+          type: boolean
+          description: CHAD.alreadyLanded
+        bb_pos_x:
+          type: number
+          description: CHAD.boundingBox.pos.x
+        bb_pos_y:
+          type: number
+          description: CHAD.boundingBox.pos.y
+        bb_size_x:
+          type: number
+          description: CHAD.boundingBox.size.x
+        bb_size_y:
+          type: number
+          description: CHAD.boundingBox.size.y
+        can_dash:
+          type: boolean
+          description: CHAD.canDash
+        can_double_jump:
+          type: boolean
+          description: CHAD.canDoubleJump
+        damage_mult:
+          type: number
+          description: CHAD.damageMultiplier
+        dash_cooldown:
+          type: number
+          description: CHAD.dashCooldownTimer
+        dash_stop:
+          type: number
+          description: CHAD.dashStopTimer
+        facing:
+          type: string
+          description: CHAD.facing
+        first_jump_timer:
+          type: number
+          description: CHAD.firstJumpTimer
+        first_jump_vel:
+          type: number
+          description: CHAD.firstJimpVelocity
+        has_dashed:
+          type: boolean
+          description: CHAD.hasDashed
+        has_double_jumped:
+          type: boolean
+          description: CHAD.hasDoubleJumped
+        health:
+          type: integer
+          description: CHAD.health
+        is_dashing:
+          type: boolean
+          description: CHAD.isDashing
+        is_jumping:
+          type: boolean
+          description: CHAD.isJumping
+        is_on_ground:
+          type: boolean
+          description: CHAD.isOnGround
+        lbb_pos_x:
+          type: number
+          description: CHAD.lastBoundingBox.pos.x
+        lbb_pos_y:
+          type: number
+          description: CHAD.lastBoundingBox.pos.y
+        lbb_size_x:
+          type: number
+          description: CHAD.lastBoundingBox.size.x
+        lbb_size_y:
+          type: number
+          description: CHAD.lastBoundingBox.size.y
+        max_health:
+          type: integer
+          description: CHAD.maxHealth
+        pos_x:
+          type: number
+          description: CHAD.pos.x
+        pos_y:
+          type: number
+          description: CHAD.pos.y
+        prev_y_on_ground:
+          type: number
+          description: CHAD.prevYPosOnGround
+        scale_x:
+          type: number
+          description: CHAD._scale.x
+        scale_y:
+          type: number
+          description: CHAD._scale.y
+        scaled_size_x:
+          type: number
+          description: CHAD.scaledSize.x
+        scaled_size_y:
+          type: number
+          description: CHAD.scaledSize.y
+        second_jump_vel:
+          type: number
+          description: CHAD.secondJumpVelocity
+        speed:
+          type: number
+          description: CHAD.speed
+        vel_x:
+          type: number
+          description: CHAD.velocity.x
+        vel_y:
+          type: number
+          description: CHAD.velocity.y
+      required:
+        - save_id
+        - player
+        - saved_at
+        - zone
+        - bunnies_killed
+        - bots_killed
+        - finished_hunting
+        - hunting_inst_received
+        - invited_hunting
+        - slimes_killed
+        - snakes_killed
+        - tutorial_complete
+        - village_attack_ended
+        - bomb_count
+        - broccoli_count
+        - rock_count
+        - slimeball_count
+        - snowball_count
+        - sus_snowball_count
+        - water_balloon_count
+        - bacon_count
+        - beef_count
+        - burger_count
+        - chicken_count
+        - energy_drink_count
+        - ham_count
+        - steak_count
+        - rune_count
+        - action
+        - already_landed
+        - bb_pos_x
+        - bb_pos_y
+        - bb_size_x
+        - bb_size_y
+        - can_dash
+        - can_double_jump
+        - damage_mult
+        - dash_cooldown
+        - dash_stop
+        - facing
+        - first_jump_timer
+        - first_jump_vel
+        - has_dashed
+        - has_double_jumped
+        - health
+        - is_dashing
+        - is_jumping
+        - is_on_ground
+        - lbb_pos_x
+        - lbb_pos_y
+        - lbb_size_x
+        - lbb_size_y
+        - max_health
+        - pos_x
+        - pos_y
+        - prev_y_on_ground
+        - scale_x
+        - scale_y
+        - scaled_size_x
+        - scaled_size_y
+        - second_jump_vel
+        - speed
+        - vel_x
+        - vel_y
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          description: a message explaining what happened.
+      required:
+        - message
+    PartialSave:
+      type: object
+      properties:
+        save_id:
+          type: string
+          description: The save_id identifying this save file.
+        saved_at:
+          type: string
+          description: The timestamp this save was created.
+        zone:
+          type: string
+          description: The name of the zone when the game was saved.
+        health:
+          type: string
+          description: Chad's health at the time of save.
+        rune_count:
+          type: integer
+          description: The amount of runes Chad had at time of save.
+      required:
+        - save_id
+        - saved_at
+        - zone
+        - health
+        - rune_count
+    PartialSaveArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/PartialSave'
+    SafePlayerInfo:
+      type: object
+      properties:
+        player_id:
+          description: account id.
+          type: string
+        username:
+          description: account username.
+          type: string
+        email:
+          description: (optional) account email address.
+          type: string
+        created:
+          description: date and time of account creation.
+          type: string
+      required:
+        - player_id
+        - username
+        - created
+    ServerSideError:
+      type: object
