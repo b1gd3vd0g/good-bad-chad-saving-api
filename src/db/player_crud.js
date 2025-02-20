@@ -150,10 +150,10 @@ const fetchPlayerByToken = async (token) => {
             } else {
                 // There were no players found (player deleted account?)
                 // or too many found (impossible?).
-                return cr(
-                    404,
-                    'Token does not represent a valid player account.'
-                );
+                return cr(401, {
+                    code: 'NPF',
+                    message: 'Token does not represent a valid player account.'
+                });
             }
         } catch (e) {
             return cr(500, e);
