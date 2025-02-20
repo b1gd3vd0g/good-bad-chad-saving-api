@@ -45,6 +45,13 @@ const generateAuthenticationToken = (player) => {
  * message explaining why the token was rejected, and a three digit code to make life easier coding the front end.
  */
 const verifyAuthenticationToken = (token) => {
+    if (!token) {
+        return {
+            success: false,
+            code: 'ABS',
+            message: 'Token is missing.'
+        };
+    }
     try {
         const payload = jwt.verify(token, JWTSEC);
         return {
