@@ -19,7 +19,7 @@ const authenticatePlayerLogin = async (unOrEmail, password) => {
     if (!unOrEmail || !password)
         return cr(400, 'username and password are required!');
 
-    let acct = await sql`
+    const acct = await sql`
         SELECT password, salt, username, player_id FROM players
             WHERE username = ${unOrEmail}
             OR email = ${unOrEmail};
