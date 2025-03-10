@@ -1,4 +1,4 @@
-/node_modules
+node_modules
 *.env*
 
 # These are usually just files for me to plan things out on.
@@ -10,4 +10,4 @@
 /test
 
 # Ignore a file with SSL stuff in dev.
-/cert
+cert
