@@ -2,8 +2,8 @@ const { generateSalt, hash } = require('./hashing');
 const sql = require('./pg');
 const cr = require('./responses');
 const {
-    generateAuthenticationToken,
-    verifyAuthenticationToken
+  generateAuthenticationToken,
+  verifyAuthenticationToken
 } = require('./token');
 
 /**
@@ -16,25 +16,25 @@ const {
  *      error object (for a 500 code) or an error message (400 | 401).
  */
 const authenticatePlayerLogin = async (unOrEmail, password) => {
-    if (!unOrEmail || !password)
-        return cr(400, 'username and password are required!');
+  if (!unOrEmail || !password)
+    return cr(400, 'username and password are required!');
 
-    const acct = await sql`
+  const acct = await sql`
         SELECT password, salt, username, player_id FROM players
             WHERE username = ${unOrEmail}
             OR email = ${unOrEmail};
     `;
-    if (acct.length !== 1) {
-        return cr(401, 'Authentication failed!');
-    }
-    acct = acct[0];
-    const hashedPw = hash(password, acct.salt);
-    if (hashedPw === acct.password) {
-        const authToken = generateAuthenticationToken(acct);
-        return cr(200, { token: authToken });
-    } else {
-        return cr(401, 'Authentication failed!');
-    }
+  if (acct.length !== 1) {
+    return cr(401, 'Authentication failed!');
+  }
+  const thisAcct = acct[0];
+  const hashedPw = hash(password, thisAcct.salt);
+  if (hashedPw === thisAcct.password) {
+    const authToken = generateAuthenticationToken(thisAcct);
+    return cr(200, { token: authToken });
+  } else {
+    return cr(401, 'Authentication failed!');
+  }
 };
 
 /**
@@ -46,67 +46,67 @@ const authenticatePlayerLogin = async (unOrEmail, password) => {
  * message (201 | 400 | 500 (due to id generation)) or an error object (500 due to postgres error).
  */
 const createNewPlayer = async (username, password, email = null) => {
-    // FAILURE NUMBER ONE: 400 BAD REQUEST
-    if (!username || !password)
-        return cr(400, 'username and password are required.');
-    // TODO: eventually, I should check for valid username and password
-    //      according to rules I haven't determined yet.
-    /** generate a player_id which does not yet exist in the db. */
-    const generatePlayerId = async () => {
-        /** generates a `random hex string` 16 characters long */
-        const rhs = () => require('crypto').randomBytes(8).toString('hex');
+  // FAILURE NUMBER ONE: 400 BAD REQUEST
+  if (!username || !password)
+    return cr(400, 'username and password are required.');
+  // TODO: eventually, I should check for valid username and password
+  //      according to rules I haven't determined yet.
+  /** generate a player_id which does not yet exist in the db. */
+  const generatePlayerId = async () => {
+    /** generates a `random hex string` 16 characters long */
+    const rhs = () => require('crypto').randomBytes(8).toString('hex');
 
-        /** checks if an id already exists in the database. */
-        const exists = async (playerId) => {
-            const result =
-                await sql`SELECT player_id FROM players WHERE player_id = ${playerId};`;
-            return result.length > 0;
-        };
-
-        const start = Date.now();
-
-        // generate a random id until you get one that does not yet exist.
-        let id;
-        let inv = true;
-        while (inv) {
-            id = rhs();
-            inv = await exists(id);
-            if (Date.now() - start > 10_000) {
-                // It has been 10 seconds and we have not generated a player id.
-                // fail.
-                return false;
-            }
-        }
-
-        // id does not exist in db. return it.
-        return id;
+    /** checks if an id already exists in the database. */
+    const exists = async (playerId) => {
+      const result =
+        await sql`SELECT player_id FROM players WHERE player_id = ${playerId};`;
+      return result.length > 0;
     };
 
-    const playerId = await generatePlayerId();
-    // FAILURE NUMBER TWO: 500 SERVER SIDE ERROR
-    if (!playerId)
-        return cr(500, 'Took longer than 10 seconds generating a player_id.');
+    const start = Date.now();
 
-    const salt = generateSalt();
-    const hashedPw = hash(password, salt);
-
-    const player = {
-        player_id: playerId,
-        username: username,
-        salt: salt,
-        password: hashedPw,
-        email: email,
-        created: new Date()
-    };
-    const cols = Object.keys(player);
-    try {
-        await sql`INSERT INTO players ${sql(player, cols)}`;
-        return cr(201, `player ${username} has been created successfully!`);
-    } catch (e) {
-        console.error(e);
-        // FAILURE NUMBER THREE: 500 SERVER SIDE ERROR
-        return cr(500, e);
+    // generate a random id until you get one that does not yet exist.
+    let id;
+    let inv = true;
+    while (inv) {
+      id = rhs();
+      inv = await exists(id);
+      if (Date.now() - start > 10_000) {
+        // It has been 10 seconds and we have not generated a player id.
+        // fail.
+        return false;
+      }
     }
+
+    // id does not exist in db. return it.
+    return id;
+  };
+
+  const playerId = await generatePlayerId();
+  // FAILURE NUMBER TWO: 500 SERVER SIDE ERROR
+  if (!playerId)
+    return cr(500, 'Took longer than 10 seconds generating a player_id.');
+
+  const salt = generateSalt();
+  const hashedPw = hash(password, salt);
+
+  const player = {
+    player_id: playerId,
+    username: username,
+    salt: salt,
+    password: hashedPw,
+    email: email,
+    created: new Date()
+  };
+  const cols = Object.keys(player);
+  try {
+    await sql`INSERT INTO players ${sql(player, cols)}`;
+    return cr(201, `player ${username} has been created successfully!`);
+  } catch (e) {
+    console.error(e);
+    // FAILURE NUMBER THREE: 500 SERVER SIDE ERROR
+    return cr(500, e);
+  }
 };
 
 /**
@@ -116,14 +116,14 @@ const createNewPlayer = async (username, password, email = null) => {
  * or an Error object on a 500 code.
  */
 const fetchAllPlayers = async () => {
-    try {
-        const players = await sql`
+  try {
+    const players = await sql`
             SELECT player_id, username, email, created FROM players;
         `;
-        return cr(200, { players });
-    } catch (e) {
-        return cr(500, e);
-    }
+    return cr(200, { players });
+  } catch (e) {
+    return cr(500, e);
+  }
 };
 
 /**
@@ -135,39 +135,39 @@ const fetchAllPlayers = async () => {
  * a message on 401 and an error object on 500.
  */
 const fetchPlayerByToken = async (token) => {
-    const verification = verifyAuthenticationToken(token);
-    if (verification.success) {
-        const { payload } = verification;
-        const { username, player_id } = payload;
-        try {
-            const player = await sql`
+  const verification = verifyAuthenticationToken(token);
+  if (verification.success) {
+    const { payload } = verification;
+    const { username, player_id } = payload;
+    try {
+      const player = await sql`
                 SELECT player_id, username, email, created FROM players
                     WHERE player_id = ${player_id}
                         AND username = ${username};
             `;
-            if (player.length === 1) {
-                return cr(200, player[0]);
-            } else {
-                // There were no players found (player deleted account?)
-                // or too many found (impossible?).
-                return cr(401, {
-                    code: 'NPF',
-                    message: 'Token does not represent a valid player account.'
-                });
-            }
-        } catch (e) {
-            return cr(500, e);
-        }
-    } else {
-        // The token was not verified successfully.
-        const { code, message } = verification;
-        return cr(401, { code, message });
+      if (player.length === 1) {
+        return cr(200, player[0]);
+      } else {
+        // There were no players found (player deleted account?)
+        // or too many found (impossible?).
+        return cr(401, {
+          code: 'NPF',
+          message: 'Token does not represent a valid player account.'
+        });
+      }
+    } catch (e) {
+      return cr(500, e);
     }
+  } else {
+    // The token was not verified successfully.
+    const { code, message } = verification;
+    return cr(401, { code, message });
+  }
 };
 
 module.exports = {
-    authenticatePlayerLogin,
-    createNewPlayer,
-    fetchAllPlayers,
-    fetchPlayerByToken
+  authenticatePlayerLogin,
+  createNewPlayer,
+  fetchAllPlayers,
+  fetchPlayerByToken
 };
