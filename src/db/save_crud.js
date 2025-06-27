@@ -3,10 +3,6 @@ const cr = require('./responses');
 const { fetchPlayerByToken } = require('./player_crud');
 const { createSavesTable } = require('./tables');
 
-// This ensures that the saves table exists in the database before trying to
-// reference it.
-createSavesTable();
-
 /**
  * Creates a new save document in the database.
  * @param {object} chad The Chad object from the game, at the point of save.
