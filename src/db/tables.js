@@ -5,9 +5,9 @@ const sql = require('./pg');
  * @throws An error if, for some reason, the db connection can't be made.
  */
 const createPlayersTable = async () => {
-    await sql`
+  await sql`
         CREATE TABLE IF NOT EXISTS players(
-            player_id       text                        PRIMARY KEY UNIQUE NOT NULL,
+            player_id       serial                      PRIMARY KEY,
             username        text                        UNIQUE NOT NULL,
             password        text,
             salt            text,
@@ -22,14 +22,14 @@ const createPlayersTable = async () => {
  * @throws An error if, for some reason, the db connection can't be made.
  */
 const createSavesTable = async () => {
-    // This MUST be done before the saves table is created, as the `player` field
-    // must correspond to a valid `player_id` from the `player` table.
-    // If the table does already exist, this function won't do anything.
-    await createPlayersTable();
-    await sql`
+  // This MUST be done before the saves table is created, as the `player` field
+  // must correspond to a valid `player_id` from the `player` table.
+  // If the table does already exist, this function won't do anything.
+  await createPlayersTable();
+  await sql`
         CREATE TABLE IF NOT EXISTS saves(
-            save_id                 text                        PRIMARY KEY UNIQUE NOT NULL,
-            player                  text                        REFERENCES players(player_id),
+            save_id                 serial                      PRIMARY KEY UNIQUE NOT NULL,
+            player                  integer                     REFERENCES players(player_id),
             saved_at                timestamp with time zone    NOT NULL,               
             zone                    text                        NOT NULL,
             bunnies_killed          integer                     DEFAULT 0,
