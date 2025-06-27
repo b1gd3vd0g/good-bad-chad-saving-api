@@ -1,10 +1,15 @@
 const { generateSalt, hash } = require('./hashing');
 const sql = require('./pg');
 const cr = require('./responses');
+const { createPlayersTable } = require('./tables');
 const {
   generateAuthenticationToken,
   verifyAuthenticationToken
 } = require('./token');
+
+// This ensures that the players table exists in the database before trying to
+// reference it.
+createPlayersTable();
 
 /**
  * Authenticates the login credentials of a player. The primary identifier
