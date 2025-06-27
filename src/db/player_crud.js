@@ -7,10 +7,6 @@ const {
   verifyAuthenticationToken
 } = require('./token');
 
-// This ensures that the players table exists in the database before trying to
-// reference it.
-createPlayersTable();
-
 /**
  * Authenticates the login credentials of a player. The primary identifier
  * can be either the username or the email address of the player, and is case
@@ -23,6 +19,8 @@ createPlayersTable();
 const authenticatePlayerLogin = async (unOrEmail, password) => {
   if (!unOrEmail || !password)
     return cr(400, 'username and password are required!');
+
+  await createPlayersTable();
 
   const acct = await sql`
         SELECT password, salt, username, player_id FROM players
@@ -56,47 +54,11 @@ const createNewPlayer = async (username, password, email = null) => {
     return cr(400, 'username and password are required.');
   // TODO: eventually, I should check for valid username and password
   //      according to rules I haven't determined yet.
-  /** generate a player_id which does not yet exist in the db. */
-  const generatePlayerId = async () => {
-    /** generates a `random hex string` 16 characters long */
-    const rhs = () => require('crypto').randomBytes(8).toString('hex');
-
-    /** checks if an id already exists in the database. */
-    const exists = async (playerId) => {
-      const result =
-        await sql`SELECT player_id FROM players WHERE player_id = ${playerId};`;
-      return result.length > 0;
-    };
-
-    const start = Date.now();
-
-    // generate a random id until you get one that does not yet exist.
-    let id;
-    let inv = true;
-    while (inv) {
-      id = rhs();
-      inv = await exists(id);
-      if (Date.now() - start > 10_000) {
-        // It has been 10 seconds and we have not generated a player id.
-        // fail.
-        return false;
-      }
-    }
-
-    // id does not exist in db. return it.
-    return id;
-  };
-
-  const playerId = await generatePlayerId();
-  // FAILURE NUMBER TWO: 500 SERVER SIDE ERROR
-  if (!playerId)
-    return cr(500, 'Took longer than 10 seconds generating a player_id.');
 
   const salt = generateSalt();
   const hashedPw = hash(password, salt);
 
   const player = {
-    player_id: playerId,
     username: username,
     salt: salt,
     password: hashedPw,
@@ -104,6 +66,9 @@ const createNewPlayer = async (username, password, email = null) => {
     created: new Date()
   };
   const cols = Object.keys(player);
+
+  await createPlayersTable();
+
   try {
     await sql`INSERT INTO players ${sql(player, cols)}`;
     return cr(201, `player ${username} has been created successfully!`);
@@ -121,6 +86,7 @@ const createNewPlayer = async (username, password, email = null) => {
  * or an Error object on a 500 code.
  */
 const fetchAllPlayers = async () => {
+  await createPlayersTable();
   try {
     const players = await sql`
             SELECT player_id, username, email, created FROM players;
@@ -144,6 +110,9 @@ const fetchPlayerByToken = async (token) => {
   if (verification.success) {
     const { payload } = verification;
     const { username, player_id } = payload;
+
+    await createPlayersTable();
+
     try {
       const player = await sql`
                 SELECT player_id, username, email, created FROM players

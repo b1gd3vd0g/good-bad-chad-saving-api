@@ -32,41 +32,6 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
     return (c) => c.type === type;
   };
 
-  const generateSaveId = async () => {
-    /** generates a `random hex string` 16 characters long */
-    const rhs = () => require('crypto').randomBytes(8).toString('hex');
-
-    /** checks if an id already exists in the database. */
-    const exists = async (saveId) => {
-      const result =
-        await sql`SELECT save_id FROM saves WHERE save_id = ${saveId};`;
-      return result.length > 0;
-    };
-
-    const start = Date.now();
-
-    // generate a random id until you get one that does not yet exist.
-    let id;
-    let inv = true;
-    while (inv) {
-      id = rhs();
-      inv = await exists(id);
-      if (Date.now() - start > 10_000) {
-        // It has been 10 seconds and we have not generated a save id.
-        // fail.
-        return false;
-      }
-    }
-
-    // id does not exist in db. return it.
-    return id;
-  };
-
-  const saveId = await generateSaveId();
-  if (!saveId) {
-    return cr(500, 'It took longer than 10 seconds to generate a save_id.');
-  }
-
   /** An object identical to a row in the database. */
   let dbObj;
   try {
@@ -144,6 +109,8 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
   }
   const cols = Object.keys(dbObj);
 
+  await createSavesTable();
+
   try {
     await sql`
             INSERT INTO saves ${sql(dbObj, cols)}
@@ -162,6 +129,7 @@ const deleteSaveById = async (saveId, authToken) => {
   }
   const { player_id } = player.info;
   try {
+    await createSavesTable();
     const result = await sql`
             DELETE FROM saves
                 WHERE player = ${player_id}
@@ -192,6 +160,7 @@ const fetchOneSaveById = async (saveId, authToken) => {
   const { player_id } = player.info;
 
   try {
+    await createSavesTable();
     const result = await sql`
             SELECT * FROM saves 
                 WHERE save_id = ${saveId}
@@ -222,6 +191,7 @@ const fetchSavesByToken = async (authToken) => {
 
   const cols = ['save_id', 'saved_at', 'zone', 'health', 'rune_count'];
   try {
+    await createSavesTable();
     const saves = await sql`
             SELECT ${sql(cols)} FROM saves 
                 WHERE player = ${player_id};
