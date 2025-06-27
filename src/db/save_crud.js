@@ -32,7 +32,6 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
   let dbObj;
   try {
     dbObj = {
-      save_id: saveId,
       player: player_id,
       saved_at: new Date(),
       zone: zone.name,
@@ -103,6 +102,7 @@ const createNewSave = async (chad, inventory, story, zone, authToken) => {
     // This means that the request must have been bad.
     return cr(400, e);
   }
+
   const cols = Object.keys(dbObj);
 
   await createSavesTable();
