@@ -10,8 +10,17 @@ if (!(DBNAME && PGHOST && PGPASS && PGPORT && PGUSER)) {
 }
 
 /** A connection to the postgres database. */
-const sql = pg(
-  `postgresql://${PGUSER}:${PGPASS}@${PGHOST}:${PGPORT}/${DBNAME}`
-);
+
+const sql = pg({
+  host: PGHOST,
+  port: PGPORT,
+  database: DBNAME,
+  username: PGUSER,
+  password: PGPASS,
+  ssl: {
+    rejectUnauthorized: true,
+    ca: require('fs').readFileSync('./cert/us-west-2-bundle.pem').toString()
+  }
+});
 
 module.exports = sql;
