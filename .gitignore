@@ -8,6 +8,3 @@
 
 # Ignore this for now, as more in-depth and formal tests will be done later.
 /test
-
-# Ignore a file with SSL stuff in dev.
-/cert
